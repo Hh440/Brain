@@ -43,7 +43,7 @@ model Tags {
 
 model Link{
   id   Int @id  @default(autoincrement())
-  hash  String
+  hash  String  @unique
   userId Int     @unique
   user   User @relation(fields: [userId], references: [id])
 }

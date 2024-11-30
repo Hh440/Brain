@@ -276,7 +276,7 @@ app.get("/api/v1/brain/:shareLink",authenticateToken,async(req,res):Promise<any>
         })
     }
 
-    const content= await prisma.content.findUnique({
+    const content= await prisma.content.findFirst({
         where:{
             userId:link.userId
         }
