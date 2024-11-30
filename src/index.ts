@@ -4,6 +4,7 @@ import jwt, { sign } from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import authenticateToken from "./middleware";
 
 
 dotenv.config()
@@ -20,26 +21,6 @@ const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@
 
 
 
-const authenticateToken=(req:any,res:any,next:any)=>{
-    const authHeader= req.headers("authorization")
-    const token = authHeader && authHeader.split(' ')[1]
-
-    if(!token){
-        return res.status(401).send("Authorization failed. No access token found")
-    }
-
-    jwt.verify(token,process.env.JWT_SECRET||"",(err:any,user:any)=>{
-        if(err){
-            return res.status(403).send("Could not verify token")
-        }
-        req.body.userId=user.id
-    })
-
-    next()
-
-    
-
-}
 
 
 app.post("/api/v1/signup",async(req:Request,res:Response):Promise<any>=>{
@@ -167,7 +148,20 @@ app.post("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
 
 })
 
-app.get("/api/v1/content",(req,res)=>{
+app.get("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
+
+    try{
+
+        const content = await prisma.content.findMany({
+            
+        })
+
+    }catch(e){
+        console.log(e)
+        return res.status(500).json({
+            message:"Error while fetching contents"
+        })
+    }
 
 })
 

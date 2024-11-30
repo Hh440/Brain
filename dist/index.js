@@ -17,6 +17,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const client_1 = require("@prisma/client");
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const middleware_1 = __importDefault(require("./middleware"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
@@ -91,10 +92,42 @@ app.post("/api/v1/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
     }
 }));
-app.post("/api/v1/content", (req, res) => {
-});
-app.get("/api/v1/content", (req, res) => {
-});
+app.post("/api/v1/content", middleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { link, tags, title, type } = req.body;
+    const { userId } = req.body;
+    try {
+        const content = yield prisma.content.create({
+            data: {
+                link,
+                title,
+                type,
+                userId,
+                tags: {
+                    connect: tags.map((tagId) => ({ id: tagId })),
+                }
+            }
+        });
+        return res.status(200).json({
+            message: "Content is created successfully",
+            content
+        });
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500).json("Error while creating the content");
+    }
+}));
+app.get("/api/v1/content", middleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const content = yield prisma.content.findMany({});
+    }
+    catch (e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Error while fetching contents"
+        });
+    }
+}));
 app.delete("/api/v1/content", (req, res) => {
 });
 app.post("/api/v1/brain/share", (req, res) => {
