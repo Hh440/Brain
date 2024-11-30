@@ -25,7 +25,7 @@ model User{
 model Content{
   id   Int @id  @default(autoincrement())
   link String 
-  type String[]  @default([])
+  type String  
   title  String
   tags    Tags[]   @relation("ContentTags") 
   userId Int     
@@ -34,13 +34,12 @@ model Content{
   
 }
 
-model Tags{
-  id   Int @id @default(autoincrement())
-  title String
-  contents Content[] @relation("ContentTags")
-  
-  
+model Tags {
+  id        Int       @id @default(autoincrement())
+  title     String    @unique
+  contents  Content[] @relation("ContentTags")
 }
+
 
 model Link{
   id   Int @id  @default(autoincrement())

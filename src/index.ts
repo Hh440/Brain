@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import authenticateToken from "./middleware";
+import crypto from 'crypto'
 
 
 dotenv.config()
@@ -48,19 +49,9 @@ app.post("/api/v1/signup",async(req:Request,res:Response):Promise<any>=>{
                     password:password
                 }
             }) 
-            
-        
-
-            const token = jwt.sign(
-                {
-                id:user.id,
-                },
-                process.env.JWT_SECRET||""
-            );
-
+           
             return res.status(201).json({
-                message:"User created Successfully",
-                token
+                message:"User created Successfully"
             })
 
     }catch(e){
@@ -93,9 +84,11 @@ app.post("/api/v1/signin",async(req,res):Promise<any>=>{
         })
         if(!user){
             return res.status(404).json({
-                message:"Email or Password is incorrect"
+                message:"Incorrect Credentials"
             })
         }
+
+
 
 
         const token= jwt.sign({id:user.id},
@@ -121,6 +114,24 @@ app.post("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
     const {userId}= req.body
 
     try{
+        
+        const tagIds= await Promise.all(
+            tags.map(async (tagName:string)=>{
+                const existingtags = await prisma.tags.findUnique({
+                    where:{
+                        title:tagName
+                    }
+                })
+
+                if(existingtags){
+                    return existingtags.id;
+                }
+
+                const newTag = await prisma.tags.create({ data: { title: tagName } });
+               return newTag.id;
+            }
+        )
+        )
 
         const content= await prisma.content.create({
             data:{
@@ -129,7 +140,7 @@ app.post("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
                 type,
                 userId,
                 tags:{
-                    connect:tags.map((tagId:number)=>({id:tagId})),
+                    connect:tagIds.map((id:number)=>({id})),
                 }
 
             }
@@ -150,10 +161,19 @@ app.post("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
 
 app.get("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
 
+    const {userId}=req.body
+
     try{
 
         const content = await prisma.content.findMany({
+            where:{
+                userId
+            }
             
+        })
+
+        return res.status(200).json({
+            message:"Content Loaded Successfully"
         })
 
     }catch(e){
@@ -165,15 +185,119 @@ app.get("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
 
 })
 
-app.delete("/api/v1/content",(req,res)=>{
+app.delete("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
+
+    const {userId,contentId }= req.body
+
+    try{
+
+        const content= await prisma.content.deleteMany({
+            where:{
+                id:contentId,
+                userId
+            }
+        })
+
+
+        return res.status(200).json({
+            message:"Deletion successfully"
+        })
+
+
+    }catch(e){
+        console.log(e)
+
+        return res.status(500).json({
+            message:"Error while deleting"
+        })
+    }
 
 })
 
-app.post("/api/v1/brain/share",(req,res)=>{
+app.post("/api/v1/brain/share",authenticateToken,async(req,res):Promise<any>=>{
+
+    const {contentId,userId}=req.body
+
+    try{
+        const content= await prisma.content.findUnique({
+            where:{
+                id:contentId,
+                userId
+            }
+        })
+
+        if(!content){
+            return res.status(401).json({
+                message:"Content is not present with the associated user"
+            })
+        }
+
+        const shareLink=crypto.randomBytes(16).toString('hex')
+
+        const share=  await prisma.link.create({
+            data:{
+                hash:shareLink,
+                userId
+            }
+        })
+
+        return res.status(200).json({
+            message:"Share Created"
+        })
+
+
+    }catch(e){
+        console.log(e)
+
+        return res.status(401).json({
+            message:"Error while creating the share Link"
+        })
+    }
 
 })
 
-app.get("/api/v1/brain/:shareLink",(req,res)=>{
+app.get("/api/v1/brain/:shareLink",authenticateToken,async(req,res):Promise<any>=>{
+   const shareLink=req.params.shareLink
+
+   try{
+
+    const link=  await prisma.link.findUnique({
+        where:{
+            hash:shareLink
+        },
+        include:{
+            user:true
+        }
+    })
+
+    if(!link){
+        return res.status(401).json({
+            message:"Share Link is not valid"
+        })
+    }
+
+    const content= await prisma.content.findUnique({
+        where:{
+            userId:link.userId
+        }
+    })
+
+    if(!content){
+        return res.status(401).json({
+            message:"No Conetn is assocaited"
+        })
+    }
+
+    return res.status(200).json({
+        message:"Accessing the Content"
+    })
+
+   }catch(e){
+    console.log(e)
+    return res.status(401).json({
+        message:"Error while accessing the share link"
+    })
+   }
 
 })
 
