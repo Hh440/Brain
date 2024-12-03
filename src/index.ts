@@ -179,7 +179,8 @@ app.get("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
         })
 
         return res.status(200).json({
-            message:"Content Loaded Successfully"
+            message:"Content Loaded Successfully",
+            content
         })
 
     }catch(e){
@@ -241,6 +242,25 @@ app.post("/api/v1/brain/share",authenticateToken,async(req,res):Promise<any>=>{
         //     })
         // }
 
+
+        const existingLink = await prisma.link.findFirst({
+            where:{
+
+                userId:userId
+
+            }
+            
+        })
+
+        if(existingLink){
+            return res.status(401).json({
+                message:"You have already shared your content",
+                hash:existingLink.hash
+
+
+            })
+        }
+
         const shareLink=crypto.randomBytes(16).toString('hex')
 
         const share=  await prisma.link.create({
@@ -250,6 +270,11 @@ app.post("/api/v1/brain/share",authenticateToken,async(req,res):Promise<any>=>{
             }
         })
 
+
+        return res.status(200).json({
+            message:"/share/"+share.hash
+        })
+
        
     }else{
         const share=  await prisma.link.delete({
@@ -257,12 +282,13 @@ app.post("/api/v1/brain/share",authenticateToken,async(req,res):Promise<any>=>{
                 userId
             }
         })
+        return res.status(200).json({
+            message:"Removed Link successfully"
+        })
 
     }
 
-    return res.status(200).json({
-        message:"Updated shareable link"
-    })
+    
 
 
     }catch(e){
