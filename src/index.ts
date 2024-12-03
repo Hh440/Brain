@@ -49,9 +49,15 @@ app.post("/api/v1/signup",async(req:Request,res:Response):Promise<any>=>{
                     password:password
                 }
             }) 
+
+        const token= jwt.sign({id:user.id},
+            process.env.JWT_SECRET||""
+        )
+
            
             return res.status(201).json({
-                message:"User created Successfully"
+                message:"User created Successfully",
+                token
             })
 
     }catch(e){
@@ -216,21 +222,24 @@ app.delete("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
 
 app.post("/api/v1/brain/share",authenticateToken,async(req,res):Promise<any>=>{
 
-    const {contentId,userId}=req.body
+  //  const {contentId,userId}=req.body
+    const {share,userId}= req.body
 
     try{
-        const content= await prisma.content.findUnique({
-            where:{
-                id:contentId,
-                userId
-            }
-        })
 
-        if(!content){
-            return res.status(401).json({
-                message:"Content is not present with the associated user"
-            })
-        }
+        if(share){
+        // const content= await prisma.content.findFirst({
+        //     where:{
+                
+        //         userId
+        //     }
+        // })
+
+        // if(!content){
+        //     return res.status(401).json({
+        //         message:"Content is not present with the associated user"
+        //     })
+        // }
 
         const shareLink=crypto.randomBytes(16).toString('hex')
 
@@ -241,9 +250,19 @@ app.post("/api/v1/brain/share",authenticateToken,async(req,res):Promise<any>=>{
             }
         })
 
-        return res.status(200).json({
-            message:"Share Created"
+       
+    }else{
+        const share=  await prisma.link.delete({
+            where:{
+                userId
+            }
         })
+
+    }
+
+    return res.status(200).json({
+        message:"Updated shareable link"
+    })
 
 
     }catch(e){
@@ -288,8 +307,21 @@ app.get("/api/v1/brain/:shareLink",authenticateToken,async(req,res):Promise<any>
         })
     }
 
+    const user= await prisma.user.findFirst({
+        where:{
+            id:link.userId
+        }
+    })
+
+    if(!user){
+        return res.status(401).json({
+            message:"user not found"
+        })
+    }
+
     return res.status(200).json({
-        message:"Accessing the Content"
+        username:user.username,
+        content:content
     })
 
    }catch(e){
