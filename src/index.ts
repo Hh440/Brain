@@ -30,16 +30,16 @@ app.post("/api/v1/signup",async(req:Request,res:Response):Promise<any>=>{
     try{
          if(!email||!password){
                 return res.status(400).json({
-                    message:"Username or password is not defined"
+                    message:"email or password is not defined"
                 })
             }
 
 
-            if (!PASSWORD_REGEX.test(password)) {
-                return res.status(400).json({
-                message: "Password must be 8-20 characters and include lowercase, uppercase, number, and special character.",
-                });
-            }
+            // if (!PASSWORD_REGEX.test(password)) {
+            //     return res.status(400).json({
+            //     message: "Password must be 8-20 characters and include lowercase, uppercase, number, and special character.",
+            //     });
+            // }
 
 
             const user = await prisma.user.create({
@@ -217,6 +217,35 @@ app.delete("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
         return res.status(500).json({
             message:"Error while deleting"
         })
+    }
+
+})
+
+app.get("/api/v1/tags",async(req,res):Promise<any>=>{
+    
+    try {
+        const tags = await prisma.tags.findMany({
+            select: {
+                title: true,
+            },
+        });
+
+        if (!tags || tags.length === 0) {
+            return res.status(404).json({
+                message: "No tags found",
+                tags: [],
+            });
+        }
+
+        return res.status(200).json({
+            message: "All tags fetched successfully",
+            tags, 
+        });
+    } catch (error) {
+        console.error("Error fetching tags:", error);
+        return res.status(500).json({
+            message: "Internal server error",
+        });
     }
 
 })
