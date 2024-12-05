@@ -174,12 +174,24 @@ app.get("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
         const content = await prisma.content.findMany({
             where:{
                 userId
+            },
+            select:{
+                id:true,
+                title:true,
+                link:true,
+                type:true,
+                tags:{
+                    select:{
+                        title:true
+                    }
+                }
+
             }
             
         })
 
-        return res.status(200).json({
-            message:"Content Loaded Successfully",
+        return res.json({
+          // message:"Content Loaded Successfully",
             content
         })
 
@@ -194,14 +206,15 @@ app.get("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
 
 app.delete("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
 
-    const {userId,contentId }= req.body
+    const {id}= req.query
 
     try{
 
-        const content= await prisma.content.deleteMany({
+        const contentId= parseInt(id as string,10)
+
+        const content= await prisma.content.delete({
             where:{
-                id:contentId,
-                userId
+                id:contentId
             }
         })
 
