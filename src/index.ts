@@ -182,6 +182,7 @@ app.get("/api/v1/content",authenticateToken,async(req,res):Promise<any>=>{
                 type:true,
                 tags:{
                     select:{
+                        id:true,
                         title:true
                     }
                 }
@@ -295,7 +296,7 @@ app.post("/api/v1/brain/share",authenticateToken,async(req,res):Promise<any>=>{
         })
 
         if(existingLink){
-            return res.status(401).json({
+            return res.status(200).json({
                 message:"You have already shared your content",
                 hash:existingLink.hash
 
@@ -314,7 +315,8 @@ app.post("/api/v1/brain/share",authenticateToken,async(req,res):Promise<any>=>{
 
 
         return res.status(200).json({
-            message:"/share/"+share.hash
+            message:"Successfuly generated share link",
+            hash:share.hash
         })
 
        
@@ -343,7 +345,7 @@ app.post("/api/v1/brain/share",authenticateToken,async(req,res):Promise<any>=>{
 
 })
 
-app.get("/api/v1/brain/:shareLink",authenticateToken,async(req,res):Promise<any>=>{
+app.get("/api/v1/brain/:shareLink",async(req,res):Promise<any>=>{
    const shareLink=req.params.shareLink
 
    try{
@@ -352,9 +354,6 @@ app.get("/api/v1/brain/:shareLink",authenticateToken,async(req,res):Promise<any>
         where:{
             hash:shareLink
         },
-        include:{
-            user:true
-        }
     })
 
     if(!link){
@@ -363,7 +362,7 @@ app.get("/api/v1/brain/:shareLink",authenticateToken,async(req,res):Promise<any>
         })
     }
 
-    const content= await prisma.content.findFirst({
+    const content= await prisma.content.findMany({
         where:{
             userId:link.userId
         }
