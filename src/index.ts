@@ -400,6 +400,96 @@ app.get("/api/v1/brain/:shareLink",async(req,res):Promise<any>=>{
 
 })
 
+
+app.get("/api/v1/content/twitter",authenticateToken,async(req,res):Promise<any>=>{
+
+    const {userId}= req.body
+
+    try{
+
+        const content= await prisma.content.findMany({
+            where:{
+                userId,
+                type:"twitter"
+            },select:{
+                id:true,
+                title:true,
+                link:true,
+                type:true,
+                tags:{
+                    select:{
+                        id:true,
+                        title:true
+                    }
+                }
+
+            }
+        })
+    
+        if(!content){
+            return res.json
+        }
+
+        return res.status(200).json({
+            message:"Succeddfuly fectched twitter post",
+            content
+        })
+    }catch(e){
+        console.error(e)
+        return res.status(500).json({
+            message:"Errow while fectching"
+        })
+    }
+})
+
+app.get("/api/v1/content/youtube",authenticateToken,async(req,res):Promise<any>=>{
+
+    const {userId}= req.body
+
+    try{
+
+        const content= await prisma.content.findMany({
+            where:{
+                userId,
+                type:"youtube"
+            },select:{
+                id:true,
+                title:true,
+                link:true,
+                type:true,
+                tags:{
+                    select:{
+                        id:true,
+                        title:true
+                    }
+                }
+
+            }
+        })
+    
+        if(!content){
+            return res.json
+        }
+
+        return res.status(200).json({
+            message:"Succeddfuly fectched youtube post",
+            content
+        })
+    }catch(e){
+        console.error(e)
+        return res.status(500).json({
+            message:"Errow while fectching"
+        })
+    }
+})
+
+
+
+
+
+
+
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
   })

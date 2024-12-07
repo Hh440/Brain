@@ -306,6 +306,76 @@ app.get("/api/v1/brain/:shareLink", (req, res) => __awaiter(void 0, void 0, void
         });
     }
 }));
+app.get("/api/v1/content/twitter", middleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.body;
+    try {
+        const content = yield prisma.content.findMany({
+            where: {
+                userId,
+                type: "twitter"
+            }, select: {
+                id: true,
+                title: true,
+                link: true,
+                type: true,
+                tags: {
+                    select: {
+                        id: true,
+                        title: true
+                    }
+                }
+            }
+        });
+        if (!content) {
+            return res.json;
+        }
+        return res.status(200).json({
+            message: "Succeddfuly fectched twitter post",
+            content
+        });
+    }
+    catch (e) {
+        console.error(e);
+        return res.status(500).json({
+            message: "Errow while fectching"
+        });
+    }
+}));
+app.get("/api/v1/content/youtube", middleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.body;
+    try {
+        const content = yield prisma.content.findMany({
+            where: {
+                userId,
+                type: "youtube"
+            }, select: {
+                id: true,
+                title: true,
+                link: true,
+                type: true,
+                tags: {
+                    select: {
+                        id: true,
+                        title: true
+                    }
+                }
+            }
+        });
+        if (!content) {
+            return res.json;
+        }
+        return res.status(200).json({
+            message: "Succeddfuly fectched youtube post",
+            content
+        });
+    }
+    catch (e) {
+        console.error(e);
+        return res.status(500).json({
+            message: "Errow while fectching"
+        });
+    }
+}));
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
 });
