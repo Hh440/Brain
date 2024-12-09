@@ -365,6 +365,18 @@ app.get("/api/v1/brain/:shareLink",async(req,res):Promise<any>=>{
     const content= await prisma.content.findMany({
         where:{
             userId:link.userId
+        }, select:{
+            id:true,
+            title:true,
+            link:true,
+            type:true,
+            tags:{
+                select:{
+                    id:true,
+                    title:true
+                }
+            }
+
         }
     })
 

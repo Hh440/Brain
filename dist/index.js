@@ -277,6 +277,17 @@ app.get("/api/v1/brain/:shareLink", (req, res) => __awaiter(void 0, void 0, void
         const content = yield prisma.content.findMany({
             where: {
                 userId: link.userId
+            }, select: {
+                id: true,
+                title: true,
+                link: true,
+                type: true,
+                tags: {
+                    select: {
+                        id: true,
+                        title: true
+                    }
+                }
             }
         });
         if (!content) {
